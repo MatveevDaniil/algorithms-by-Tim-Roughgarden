@@ -1,0 +1,20 @@
+def calc_optimal_size_O_N(fname):
+    with open(fname) as f:
+        W, N = list(map(int, f.readline().split()))
+        v, w = [], []
+        for _ in range(N):
+            _v, _w = list(map(int, f.readline().split()))
+            v.append(_v); w.append(_w)
+    print(W, N)
+#     return
+    A, A_prev = [0] * (W + 1), [0] * (W + 1)
+    for i in range(N):
+        for x in range(W + 1):
+            if x >= w[i]:
+                A[x] = max(A_prev[x], A_prev[x - w[i]] + v[i])
+            else:
+                A[x] = A_prev[x]
+        A, A_prev = [0] * (W + 1), A
+    return A_prev[-1]
+    
+print(calc_optimal_size_O_N('./knapsack_big.txt'))
