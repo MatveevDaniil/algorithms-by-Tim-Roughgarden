@@ -1,0 +1,81 @@
+from heapq import *
+    
+class Graph:
+    def __init__(self, fname):
+        self.n = 0
+        self.e = 0
+        self.G = {}
+        self.G_rev = {}
+        self.all_edges_positive = True
+        if fname:
+            self.read_file(fname)
+        elif tsv_name:
+            self.read_tsv(tsv_name)
+    
+    def read_file(self, fname):
+        with open(fname) as f:
+            self.n, self.e = list(map(int, f.readline().split()))
+            line = f.readline()
+            while line:
+                start, end, length = list(map(int, line.split()))
+                if length < 0:
+                    self.all_edges_positive = False
+                if start == end: continue
+                if start not in self.G:
+                    self.G[start] = {}
+                if end not in self.G_rev:
+                    self.G_rev[end] = {}
+                self.G[start][end] = length
+                self.G_rev[end][start] = length
+                line = f.readline()
+                
+    def dijkstra(self, src):
+        distList = [None] * (self.n + 1)
+        heap = [(0, src)]
+        while heap:
+            cur_dist, node = heappop(heap)
+            if distList[node]: continue
+            distList[node] = cur_dist
+            for child, child_edge in self.G[node].items():
+                if distList[child] is None: 
+                    heappush(heap, (child_edge + cur_dist, child))
+                    
+        distList[src] = distList[0] = float('inf')
+#         print(distList)
+        return min(distList)
+    
+    def bellman_ford(self, src):
+        A = [float('inf')] * (self.n + 1)
+        A[src] = 0
+        for _ in range(self.n - 1):
+            _A = A[:]
+            for v in range(1, self.n + 1):
+                for w, c_wv in self.G_rev.get(v, {}).items():
+                    if A[w] + c_wv < _A[v]: _A[v] = A[w] + c_wv
+            A = _A
+            
+        _A = [0] * (self.n + 1)
+        for v in range(1, self.n + 1):
+            _A[v] = A[v]
+            for w, c_wv in self.G_rev.get(v, {}).items():
+                if A[w] + c_wv < _A[v]: 
+                    print('negative cycle detected')
+                    return
+                
+        A[src] = A[0] = float('inf')
+        return min(A)
+                 
+                 
+def main(fname):
+    g = Graph(fname)
+    min_len = float('inf')
+    for i in range(1, g.n + 1):
+        if i % 10 == 0:
+            print("iteration %d ended" % i)
+        min_len = min(min_len, g.bellman_ford(i))
+    print(min_len)
+    
+                 
+if __name__ == "__main__":
+    print('hello, calculation starts..')
+    main('./g3.txt')
